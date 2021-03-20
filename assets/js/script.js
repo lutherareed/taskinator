@@ -54,9 +54,18 @@ var createTaskEl = function(taskDataObj) {
   listItemEl.appendChild(taskInfoEl);
 
   // create task actions (buttons and select) for task
-  var taskActionsEl = createTaskActions(taskIdCounter);
+  var taskActionsEl = createTaskActions(taskIdCounter, taskDataObj);
   listItemEl.appendChild(taskActionsEl);
-  tasksToDoEl.appendChild(listItemEl);
+
+  if (taskDataObj.status === "to do") {
+    tasksToDoEl.appendChild(listItemEl);
+  } else if (taskDataObj.status === "in progress") {
+    tasksInProgressEl.appendChild(listItemEl);
+  } else if (taskDataObj.status === "completed") {
+    tasksCompletedEl.appendChild(listItemEl);
+  } else {
+    tasksToDoEl.appendChild(listItemEl);
+  }
 
   // save the task ID in the data object for persistence
   taskDataObj.id = taskIdCounter;
@@ -67,7 +76,7 @@ var createTaskEl = function(taskDataObj) {
   taskIdCounter++;
 };
 
-var createTaskActions = function(taskId) {
+var createTaskActions = function(taskId, taskDataObj) {
   // create container to hold elements
   var actionContainerEl = document.createElement("div");
   actionContainerEl.className = "task-actions";
@@ -101,6 +110,17 @@ var createTaskActions = function(taskId) {
 
     // append to select
     statusSelectEl.appendChild(statusOptionEl);
+  }
+
+  if (taskDataObj.status === undefined) {
+    taskDataObj.status = "to do";
+  }
+  if (taskDataObj.status === "to do") {
+    statusSelectEl.selectedIndex = 0;
+  } else if (taskDataObj.status == "in progress") {
+    statusSelectEl.selectedIndex = 1;
+  } else {
+    statusSelectEl.selectedIndex = 2;
   }
 
   return actionContainerEl;
@@ -270,6 +290,21 @@ var saveTasks = function() {
   localStorage.setItem("tasks", JSON.stringify(tasks));
 }
 
+// retrieves task items from localStorage.
+var loadTasks = function() {
+  var savedTasks = localStorage.getItem("tasks");
+
+  if (!savedTasks) {
+    return false;
+  }
+  
+  savedTasks = JSON.parse(savedTasks);
+
+  for (var i = 0; i < savedTasks.length; i++) {
+    createTaskEl(savedTasks[i]);
+  }
+}
+
 // Create a new task
 formEl.addEventListener("submit", taskFormHandler);
 
@@ -290,3 +325,6 @@ pageContentEl.addEventListener("dragleave", dragLeaveHandler);
 
 // listen for drop events
 pageContentEl.addEventListener("drop", dropTaskHandler);
+
+// load any persisted tasks
+loadTasks();
